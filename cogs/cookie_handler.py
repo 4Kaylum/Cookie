@@ -67,7 +67,6 @@ class CookieHandler(utils.Cog):
 
         # Check inventory
         if not inv or inv[0]['amount'] < amount or inv[0]['cookie_guild_id'] is None:
-            await ctx.send(inv)
             await db.disconnect()
             return await ctx.send(f"You don't have `{amount}x {' '.join([i for i in cookie_type if i])} cookies`.")
 
@@ -131,6 +130,8 @@ class CookieHandler(utils.Cog):
             else:
                 adjective = adj1
             lines.append(f"{row['amount']}x {adjective} cookies")
+        if not lines:
+            return await ctx.send("You don't have any cookies, unfortunately.")
         await ctx.send('\n'.join(lines))
 
 
