@@ -110,18 +110,59 @@ class CookieHandler(utils.Cog):
             adjective = adj1
         await ctx.send(f"You just gained `{amount}x {adjective} cookies`.")
 
+    @commands.command(cls=utils.Command)
+    @utils.cooldown.cooldown(1, 60 * 60 * 24, commands.BucketType.member)
+    @commands.has_permissions(manage_guild=True)
+    @commands.guild_only()
+    async def setcookie(self, ctx:utils.Context, adj1:str, adj2:typing.Optional[str]=None):
+        """Sets the cookie type for your server"""
+
+        # Check adjectives
+        if self.cached_adjectives is None:
+            await self.load_adjective_cache()
+        if adj1 not in self.cached_adjectives:
+            return await ctx.send(f"`{adj1}` is not a valid adjective.")
+        if adj2 and adj2 not in self.cached_adjectives:
+            return await ctx.send(f"`{adj2}` is not a valid adjective.")
+
+        # Save
+        async with self.bot.database() as db:
+            await db(
+                """UPDATE guild_cookie_prefixes SET adjective1=$1, adjective2=$2 WHERE guild_id=$3""",
+                adj1, adj2, ctx.guild.id
+            )
+
+        # Output
+        if adj2:
+            adj = f"{adj1} {adj2}"
+        else:
+            adj = adj1
+        await ctx.send(f"Your server's cookie type has been updated to `{adj} cookies`.")
+
     @commands.command(cls=utils.Command, aliases=['inv', 'i'])
     @utils.cooldown.cooldown(1, 120, commands.BucketType.member)
-    async def inventory(self, ctx:utils.Context):
+    async def inventory(self, ctx:utils.Context, user:typing.Optional[discord.User]=None):
         """Shows you your cookie inventory"""
 
+        user = user or ctx.author
+
+        # Get data
         async with self.bot.database() as db:
             data = await db(
-                """SELECT guild_cookie_prefixes.adjective1, guild_cookie_prefixes.adjective2, user_cookies.amount FROM
+                """SELECT guild_cookie_prefixes.adjective1, guild_cookie_prefixes.adjective2, user_cookies.amount, user_cookies.cookie_guild_id FROM
                 user_cookies LEFT JOIN guild_cookie_prefixes ON user_cookies.cookie_guild_id=guild_cookie_prefixes.guild_id
-                WHERE user_cookies.user_id=$1""",
-                ctx.author.id
+                WHERE user_cookies.user_id=$1 ORDER BY user_cookies.amount DESC""",
+                user.id
             )
+            all_cookie_data = await db(
+                """SELECT cookie_guild_id, SUM(amount) FROM user_cookies WHERE cookie_guild_id=ANY($1::BIGINT[]) GROUP BY cookie_guild_id""",
+                [i['cookie_guild_id'] for i in data]
+            )
+
+        # Get total cookies
+        total_cookies = {i['cookie_guild_id']: i['sum'] for i in all_cookie_data}
+
+        # Format output
         lines = []
         for row in data:
             adj1, adj2 = row['adjective1'], row['adjective2']
@@ -129,9 +170,11 @@ class CookieHandler(utils.Cog):
                 adjective = f"{adj1} {adj2}"
             else:
                 adjective = adj1
-            lines.append(f"{row['amount']}x {adjective} cookies")
+            lines.append(f"`{row['amount']}x {adjective} cookies` (`{100 * (row['amount'] / total_cookies[row['cookie_guild_id']]):.3f}%`)")
+
+        # Output to user
         if not lines:
-            return await ctx.send("You don't have any cookies, unfortunately.")
+            return await ctx.send(f"{user.mention} has no cookies to their name.")
         await ctx.send('\n'.join(lines))
 
 
