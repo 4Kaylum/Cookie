@@ -28,13 +28,17 @@ class CookieHandler(utils.Cog):
 
         if self.cached_adjectives is None:
             await self.load_adjective_cache()
-        choice = random.choices(self.cached_adjectives, k=2)
         async with self.bot.database() as db:
-            await db(
-                """INSERT INTO guild_cookie_prefixes (guild_id, adjective1, adjective2) 
-                VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO NOTHING""", 
-                guild.id, choice[0], choice[1]
-            )
+            while True:
+                choice = random.choices(self.cached_adjectives, k=2)
+                data = await db("SELECT guild_id FROM guild_cookie_prefixes WHERE adjective1=$1 AND adjective2=$2", choice[0], choice[1])
+                if not data:
+                    await db(
+                        """INSERT INTO guild_cookie_prefixes (guild_id, adjective1, adjective2) 
+                        VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO NOTHING""", 
+                        guild.id, choice[0], choice[1]
+                    )
+                    return
 
     @commands.command(cls=utils.Command, aliases=['gc', 'give'])
     async def givecookie(self, ctx:utils.Context, user:discord.Member, amount:typing.Optional[int]=1, *cookie_type:str):
@@ -127,6 +131,14 @@ class CookieHandler(utils.Cog):
 
         # Save
         async with self.bot.database() as db:
+            if adj2:
+                data = await db("SELECT guild_id FROM guild_cookie_prefixes WHERE adjective1=$1 AND adjective2=$2", adj1, adj2)
+                if data:
+                    return await ctx.send(f"There's already a server with `{adj1} {adj2} cookies` - you must set a unique name.")
+            else:
+                data = await db("SELECT guild_id FROM guild_cookie_prefixes WHERE adjective1=$1 AND adjective2 is NULL", adj1)
+                if data:
+                    return await ctx.send(f"There's already a server with `{adj1} cookies` - you must set a unique name.")
             await db(
                 """UPDATE guild_cookie_prefixes SET adjective1=$1, adjective2=$2 WHERE guild_id=$3""",
                 adj1, adj2, ctx.guild.id
