@@ -51,7 +51,7 @@ guild_settings_prefix_column = "prefix"  # Used if multiple bots connect to the 
     guild_invite = ""  # A link to be used on !support
     github_link = ""  # A link to be used on !git
     donate_link = ""  # A link to be used on !donate
-    invite_command_permissions = []  # args here are passed directly to discord.Permissions. An empty list disabled the invite command
+    invite_command_permissions = [ "read_messages", "send_messages" ]  # args here are passed directly to discord.Permissions. An empty list disabled the invite command
     echo_command_enabled = true  # Whether or not the invite command is enabled
     stats_command_enabled = true  # Whether or not the stats command is enabled
     vote_command_enabled = false  # Whether or not the top.gg vote command is enabled
@@ -59,7 +59,7 @@ guild_settings_prefix_column = "prefix"  # Used if multiple bots connect to the 
 
 # This data is passed directly over to asyncpg.connect()
 [database]
-    enabled = false
+    enabled = true
     user = "database_username"
     password = "database_password"
     database = "database_name"
