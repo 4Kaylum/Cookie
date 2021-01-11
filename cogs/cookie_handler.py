@@ -98,7 +98,7 @@ class CookieHandler(utils.Cog):
         await ctx.send(f"You've successfully sent `{amount}x {' '.join([i for i in cookie_type if i])} cookies` to {user.mention}.")
 
     @utils.command(aliases=['daily'])
-    @utils.cooldown.cooldown(1, 60 * 60, commands.BucketType.member)
+    @utils.cooldown.cooldown(1, 15 * 60, commands.BucketType.member)
     @commands.guild_only()
     async def mine(self, ctx:utils.Context):
         """Gives you a sexy ol daily amount of cookies"""
@@ -119,8 +119,8 @@ class CookieHandler(utils.Cog):
             adjective = adj1
         await ctx.send(f"You just gained `{amount}x {adjective} cookies`.")
 
-    @utils.command()
-    @utils.cooldown.cooldown(1, 60 * 60 * 24, commands.BucketType.member)
+    @utils.command(enabled=False)
+    @utils.cooldown.cooldown(1, 60 * 60 * 24, commands.BucketType.guild)
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
     async def setcookie(self, ctx:utils.Context, adj1:str, adj2:typing.Optional[str]=None):
@@ -130,8 +130,10 @@ class CookieHandler(utils.Cog):
         if self.cached_adjectives is None:
             await self.load_adjective_cache()
         if adj1 not in self.cached_adjectives:
+            # Reset cooldown here
             return await ctx.send(f"`{adj1}` is not a valid adjective.")
         if adj2 and adj2 not in self.cached_adjectives:
+            # Reset cooldown here
             return await ctx.send(f"`{adj2}` is not a valid adjective.")
 
         # Save
@@ -157,7 +159,6 @@ class CookieHandler(utils.Cog):
         await ctx.send(f"Your server's cookie type has been updated to `{adj} cookies`.")
 
     @utils.command(aliases=['inv', 'i'])
-    @utils.cooldown.cooldown(1, 120, commands.BucketType.member)
     async def inventory(self, ctx:utils.Context, user:typing.Optional[discord.User]=None):
         """Shows you your cookie inventory"""
 
