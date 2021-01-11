@@ -3,8 +3,7 @@ import typing
 
 import discord
 from discord.ext import commands
-
-from cogs import utils
+import voxelbotutils as utils
 
 
 class CookieHandler(utils.Cog):
@@ -40,7 +39,7 @@ class CookieHandler(utils.Cog):
                     )
                     return
 
-    @commands.command(cls=utils.Command, aliases=['gc', 'give'])
+    @utils.command(aliases=['gc', 'give'])
     async def givecookie(self, ctx:utils.Context, user:discord.Member, amount:typing.Optional[int]=1, *cookie_type:str):
         """Gives one cookie to another person"""
 
@@ -98,7 +97,7 @@ class CookieHandler(utils.Cog):
         # And output
         await ctx.send(f"You've successfully sent `{amount}x {' '.join([i for i in cookie_type if i])} cookies` to {user.mention}.")
 
-    @commands.command(cls=utils.Command, aliases=['daily'])
+    @utils.command(aliases=['daily'])
     @utils.cooldown.cooldown(1, 60 * 60, commands.BucketType.member)
     @commands.guild_only()
     async def mine(self, ctx:utils.Context):
@@ -120,7 +119,7 @@ class CookieHandler(utils.Cog):
             adjective = adj1
         await ctx.send(f"You just gained `{amount}x {adjective} cookies`.")
 
-    @commands.command(cls=utils.Command)
+    @utils.command()
     @utils.cooldown.cooldown(1, 60 * 60 * 24, commands.BucketType.member)
     @commands.has_permissions(manage_guild=True)
     @commands.guild_only()
@@ -157,7 +156,7 @@ class CookieHandler(utils.Cog):
             adj = adj1
         await ctx.send(f"Your server's cookie type has been updated to `{adj} cookies`.")
 
-    @commands.command(cls=utils.Command, aliases=['inv', 'i'])
+    @utils.command(aliases=['inv', 'i'])
     @utils.cooldown.cooldown(1, 120, commands.BucketType.member)
     async def inventory(self, ctx:utils.Context, user:typing.Optional[discord.User]=None):
         """Shows you your cookie inventory"""
