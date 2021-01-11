@@ -34,8 +34,8 @@ class CookieHandler(utils.Cog):
                 data = await db("SELECT guild_id FROM guild_cookie_prefixes WHERE adjective1=$1 AND adjective2=$2", choice[0], choice[1])
                 if not data:
                     await db(
-                        """INSERT INTO guild_cookie_prefixes (guild_id, adjective1, adjective2) 
-                        VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO NOTHING""", 
+                        """INSERT INTO guild_cookie_prefixes (guild_id, adjective1, adjective2)
+                        VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO NOTHING""",
                         guild.id, choice[0], choice[1]
                     )
                     return
@@ -44,13 +44,19 @@ class CookieHandler(utils.Cog):
     async def givecookie(self, ctx:utils.Context, user:discord.Member, amount:typing.Optional[int]=1, *cookie_type:str):
         """Gives one cookie to another person"""
 
+        PROVIDE_COOKIE_TYPE = "You need to provide a cookie type."
+
+        # Make sure they gave a cookie type
+        if not cookie_type:
+            return await ctx.send(PROVIDE_COOKIE_TYPE)
+
         # Remove "cookie" from list
         while cookie_type[-1].lower() in ['cookie', 'cookies']:
             cookie_type = cookie_type[:-1]
 
         # Fix up cookie type
         if len(cookie_type) == 0:
-            return await ctx.send("You need to provide a cookie type.")
+            return await ctx.send(PROVIDE_COOKIE_TYPE)
         elif len(cookie_type) > 2:
             return await ctx.send(f"You have no `{' '.join(cookie_type)} cookies`.")
         if len(cookie_type) == 1:
@@ -62,7 +68,7 @@ class CookieHandler(utils.Cog):
 
         # Check the author's inventory
         inv = await db(
-            f"""SELECT user_cookies.amount, user_cookies.cookie_guild_id FROM user_cookies 
+            f"""SELECT user_cookies.amount, user_cookies.cookie_guild_id FROM user_cookies
             WHERE user_cookies.cookie_guild_id IN
             (SELECT guild_id FROM guild_cookie_prefixes WHERE adjective1=$2 AND adjective2{'=$3' if cookie_type[-1] else ' IS NULL'})
             AND user_cookies.user_id=$1""",
@@ -77,8 +83,8 @@ class CookieHandler(utils.Cog):
         # They have enough - transfer
         await db.start_transaction()
         await db(
-            """INSERT INTO user_cookies (user_id, cookie_guild_id, amount) 
-            VALUES ($1, $2, $3) ON CONFLICT (user_id, cookie_guild_id) DO UPDATE 
+            """INSERT INTO user_cookies (user_id, cookie_guild_id, amount)
+            VALUES ($1, $2, $3) ON CONFLICT (user_id, cookie_guild_id) DO UPDATE
             SET amount=user_cookies.amount+EXCLUDED.amount""",
             user.id, inv[0]['cookie_guild_id'], amount
         )
@@ -101,8 +107,8 @@ class CookieHandler(utils.Cog):
         amount = random.randint(10, 30)
         async with self.bot.database() as db:
             await db(
-                """INSERT INTO user_cookies (user_id, cookie_guild_id, amount) 
-                VALUES ($1, $2, $3) ON CONFLICT (user_id, cookie_guild_id) DO UPDATE 
+                """INSERT INTO user_cookies (user_id, cookie_guild_id, amount)
+                VALUES ($1, $2, $3) ON CONFLICT (user_id, cookie_guild_id) DO UPDATE
                 SET amount=user_cookies.amount+EXCLUDED.amount""",
                 ctx.author.id, ctx.guild.id, amount
             )
