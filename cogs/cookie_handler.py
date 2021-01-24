@@ -190,7 +190,7 @@ class CookieHandler(utils.Cog):
                 adjective = f"{adj1} {adj2}"
             else:
                 adjective = adj1
-            lines.append(f"`{row['amount']}x {adjective} cookies` (`{100 * (row['amount'] / total_cookies[row['cookie_guild_id']]):.3f}%`)")
+            lines.append(f"**{row['amount']}**x *{adjective}* cookies (`{100 * (row['amount'] / total_cookies[row['cookie_guild_id']]):.3f}%` of the total)")
 
         # Output to user
         if not lines:
