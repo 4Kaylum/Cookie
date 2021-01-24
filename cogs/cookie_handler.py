@@ -54,6 +54,8 @@ class CookieHandler(utils.Cog):
             cookie_type = cookie_type[:-1]
 
         # Fix up cookie type
+        if amount <= 0:
+            return await ctx.send("You need to give a number larger than 0.")
         if len(cookie_type) == 0:
             return await ctx.send(PROVIDE_COOKIE_TYPE)
         elif len(cookie_type) > 2:
